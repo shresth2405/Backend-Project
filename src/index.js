@@ -6,16 +6,23 @@ import express from "express"
 import connectDB from "./db/index.js";
 
 
+
 const app=express();
 dotenv.config({
     path:"./env"
 })
 
 connectDB()
-
-app.listen(process.env.PORT,()=>{
-         console.log(`Port is listening on port ${process.env.PORT}`)
+.then(()=>{
+    app.listen(process.env.PORT || 8000,()=>{
+        console.log(`Port is listening on port ${process.env.PORT}`)
 })
+})
+.catch((err)=>{
+    console.log("MongoDb connection failed!!!",err)
+})
+// CORS -> cross origin resource sharing
+
 
 
 
