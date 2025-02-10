@@ -25,3 +25,5 @@ const UploadOnCloudinary=async function(loacalPathFile){
     }
 }
 
+export {UploadOnCloudinary}
+
