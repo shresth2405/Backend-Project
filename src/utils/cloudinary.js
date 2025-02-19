@@ -13,7 +13,6 @@ const UploadOnCloudinary=async function(loacalPathFile){
         const response=await cloudinary.uploader
         .upload(
             loacalPathFile,{
-             public_id:'An image',
              resource_type:"auto"
             }
         )
