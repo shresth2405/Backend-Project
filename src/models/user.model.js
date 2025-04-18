@@ -59,7 +59,7 @@ userSchema.pre("save", async function(next){
 }) //to encrypt the password
 
 userSchema.methods.isPasswordCorrect=async function (password){
-    const passwordForCheck=await bcrypt.hash(password, 10);
+    // const passwordForCheck=await bcrypt.hash(password, 10);
     // console.log(passwordForCheck);
     // console.log(this.password);
     const result=await bcrypt.compare(password, this.password)

@@ -16,7 +16,7 @@ const UploadOnCloudinary=async function(loacalPathFile){
              resource_type:"auto"
             }
         )
-        // fs.unlinkSync(loacalPathFile)
+        fs.unlinkSync(loacalPathFile)
         // console.log("file is uploaded successfully",response.url)
         return response;
     }catch(error){
@@ -25,5 +25,14 @@ const UploadOnCloudinary=async function(loacalPathFile){
     }
 }
 
-export {UploadOnCloudinary}
+const deleteOnCloudinary= async(localpath)=>{
+    try{
+        cloudinary.uploader
+  .destroy(localpath)
+    }catch(e){
+        console.log("cannot delete");
+    }
+}
+
+export {UploadOnCloudinary,deleteOnCloudinary}
 
