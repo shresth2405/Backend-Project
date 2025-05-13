@@ -15,16 +15,16 @@ const videoSchema =new Schema({
     description:{
         type:String,
         required:true,
-        unique:true,  
+        // unique:true,  
         index:true
     },
     duration:{
         type:Number,
-        required:true,
+        // required:true,
     },
     views:{
         type:Number,
-        required:true,
+        // required:true,
         default:0 
     },
     isPublished:{
@@ -49,4 +49,4 @@ const videoSchema =new Schema({
 
 videoSchema.plugin(mongooseAggregatePaginate)
 
-const Video=new model("Video", videoSchema)
+export const Video=new mongoose.model("Video", videoSchema)
