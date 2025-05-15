@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: my-static-site
+    env: static
+    buildCommand: npm run build
+    staticPublishPath: build
+    branch: main
