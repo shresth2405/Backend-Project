@@ -22,9 +22,9 @@ router.route("/publish").patch(
 router.route("/").get(getAllVideo)
 
 router.route("/:videoId").get(getVideoById)
-router.route("/update").post(updateVideo);
-router.route("/delete").post(deleteVideo)
-router.route("/toggleStatus").post(togglePublishStatus)
-router.route("/increaseViews").post(increaseViews)
+router.route("/update/:videoId").put(updateVideo);
+router.route("/delete/:videoId").delete(deleteVideo)
+router.route("/toggleStatus/:videoId").put(togglePublishStatus)
+router.route("/increaseViews/:videoId").put(increaseViews)
 
 export default router

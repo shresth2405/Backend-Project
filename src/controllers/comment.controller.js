@@ -9,10 +9,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
     const {videoId} = req.params
     const {page = 1, limit = 10} = req.query
-    const comment = Comment.aggregate([
+    const comment = await Comment.aggregate([
         {
             $match:{
-               videoId: mongoose.Types.ObjectId(videoId)
+               video: new mongoose.Types.ObjectId(videoId)
             }
         },
         {
@@ -20,7 +20,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
                 from : "users",
                 localField:"owner",
                 foreignField:"_id",
-                as:"owner",
+                as:"Commentowner",
                 pipeline:[
                     {
                         $project:{
@@ -53,19 +53,19 @@ const addComment = asyncHandler(async (req, res) => {
     // TODO: add a comment to a video
     const {content} = req.body
     const {videoId} = req.params;
-    const video = Video.findById(videoId);
+    // const video = Video.findById(videoId);
 
-    const comment = Comment.create(
+    const comment = await Comment.create(
         {
             content: content,
-            video: video,
+            video: videoId,
             owner: req.user?._id 
         }
     )
     if(!comment){
         throw new ApiError(400,"Comment cannot be empty");
     }
-    comment.save({validateBeforeSave: false});
+    // comment.save({validateBeforeSave: false});
 
     return res
     .status(200)
@@ -76,9 +76,9 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
-    const {commentId} = req.query
+    const {commentId} = req.params
     const {newComment} = req.body
-    const comment = Comment.findById(commentId);
+    const comment = await Comment.findById(commentId);
     if(!comment){
         throw new ApiError(400, "Comment cannot be found")
     }
@@ -87,23 +87,13 @@ const updateComment = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, "comment updated successfully")
+        new ApiResponse(200, comment ,"comment updated successfully")
     )
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
-    const {commentId} = req.query
-    const comment = await Comment.findByIdAndUpdate((commentId),{
-        $unset:{
-            commentId:1,
-            content:1,
-            owner: 1,
-            video: 1
-        }
-    },
-        { new: true }
-    )
-    // comment.save({validateBeforeSave:false});
+    const {commentId} = req.params
+    const comment = await Comment.findByIdAndDelete(commentId)
     return res
     .status(200)
     .json(

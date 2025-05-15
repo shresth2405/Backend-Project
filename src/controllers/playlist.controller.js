@@ -20,8 +20,8 @@ const createPlaylist = asyncHandler(async (req, res) => {
 })
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
-    const {userId} = req.params
-    const playlist = await Playlist.find({owner: userId});
+    const userId = req.user._id
+    const playlist = await Playlist.find({owner: new mongoose.Types.ObjectId(userId)});
     if(!playlist){
         throw new ApiError(400,"Playlist not found")
     }
@@ -43,11 +43,13 @@ const getPlaylistById = asyncHandler(async (req, res) => {
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params;
+    // console.log(playlistId, videoId)
     const playlist = await Playlist.findById(playlistId);
     const video = await Video.findById(videoId);
-    if(!video && !playlist){
+    if(!video || !playlist){
         throw new ApiError(400, "Video Or PLaylist is missing")
     }
+    console.log(video, playlist)
     const isAlreadyInPlaylist = playlist.videos.includes(video._id);
     if (isAlreadyInPlaylist) {
         throw new ApiError(400, "Video already exists in playlist");

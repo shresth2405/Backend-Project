@@ -12,7 +12,7 @@ export const getAllVideo = asyncHandler(async(req, res)=>{
         ...(userId?{title:{$regex: userId, $options: "i"}}: {})
     }
 
-    const video = Video.aggregate([
+    const video = await Video.aggregate([
         {
             $match: match,
         },{
@@ -20,7 +20,7 @@ export const getAllVideo = asyncHandler(async(req, res)=>{
                 from : "users",
                 localField: "owner",
                 foreignField:"_id",
-                as: videoByOwner
+                as: "videoByOwner"
             }
         },{
             $project:{
@@ -30,7 +30,7 @@ export const getAllVideo = asyncHandler(async(req, res)=>{
                 description:1,
                 views: 1,
                 owner: {
-                    $arrayElemAt: [$videoByOwner,0],
+                    $arrayElemAt: ["$videoByOwner",0],
                 }
             }
         },{
@@ -43,6 +43,7 @@ export const getAllVideo = asyncHandler(async(req, res)=>{
             $limit: parseInt(limit)
         }
     ])
+    console.log(video)
 
     if(!video.length){
         throw new ApiError(400,"videos cannot be fetched");
@@ -107,35 +108,60 @@ export const getVideoById = asyncHandler(async (req, res) => { //isko check kais
 });
 
 export const updateVideo = asyncHandler(async (req, res) => { // to update the thumbnail
-    const { videoId, title, description} = req.params
+    const { videoId } = req.params
+    const { title, description} = req.body
     const video = await Video.findById(videoId);
-    if(video.owner!==req.user._id){
+    console.log(video.owner._id)
+    console.log(req.user._id)
+    if(video.owner._id.toString()!==req.user._id.toString()){
         throw new ApiError(401, "Unauthorised Request");
     }
     video.title=title;
     video.description= description;
     await video.save({validateBeforeSave: false})
+    return res
+    .status(201)
+    .json(new ApiResponse(201, video, "video updated successfully"))
+
 })
 
 export const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const video = await Video.findById(videoId);
-    if(video.owner!==req.user._id){
+    if(video.owner._id.toString()!==req.user._id.toString()){
         throw new ApiError(401, "Unauthorised Request");
     }
     const path= video.videoFile;
     await deleteOnCloudinary(path);
+    await Video.findByIdAndDelete(videoId)
+
+    return res
+    .status(201)
+    .json(new ApiResponse(201, "video deleted successfully"))
 
 })
 
 export const togglePublishStatus = asyncHandler(async (req, res) => {
+    console.log(req.params)
+    let message;
     const { videoId } = req.params
+    console.log(videoId)
     const video = await Video.findById(videoId);
-    if(video.owner!==req.user._id){
+    if(video.owner._id.toString()!==req.user._id.toString()){
         throw new ApiError(401, "Unauthorised Request");
     }
-    video.isPublished= false;
+    if(video.isPublished){
+        video.isPublished=false;
+        message = "Video unpublished successfully"
+    }
+    else{
+        video.isPublished= true
+        message = "Video published successfully"
+    }
     video.save({validateBeforeSave: false})
+
+    return res.status(201)
+    .json(new ApiResponse(201, message))
 
 })
 

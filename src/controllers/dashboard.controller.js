@@ -1,7 +1,7 @@
 import mongoose from "mongoose"
 import {Video} from "../models/video.model.js"
 import {Subscription} from "../models/subscription.model.js"
-import {Like, Likes} from "../models/like.model.js"
+import {Like} from "../models/like.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
@@ -9,26 +9,28 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 const getChannelStats = asyncHandler(async (req, res) => {
     // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
     const channelId = req.user._id;
-    const subscriberCount = await Subscription.countDocuments({channel: user})
+    const subscriberCount = await Subscription.countDocuments({channel: channelId})
+    console.log("count:",subscriberCount)
     const totalViews = await Video.aggregate([
         {
             $match: {
-                owner: mongoose.Types.ObjectId(channelId)
+                owner: new mongoose.Types.ObjectId(channelId)
             }
         },
         {
             $group:{
-                id: null,
+                _id: null,
                 totalVideos: {$sum: 1},
                 totalView: {$sum: "$views"}
             }
         }
     ])
+    console.log("views:",totalViews)
 
-    const videoId = await Video.find({owner: mongoose.Types.ObjectId(channelId)})
+    const videoId = await Video.find({owner: new mongoose.Types.ObjectId(channelId)})
 
-    const likeCount = Like.countDocuments({
-        video : {$in: videoId}
+    const likeCount = await Like.countDocuments({
+        video : {$in: videoId._id}
     })
 
     const stats = {
@@ -36,7 +38,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
         subscriberCount: subscriberCount,
         likeCount: likeCount
     }
-    return new ApiResponse(201, stats, "All stats have been achieved")
+    return res.status(201)
+    .json(new ApiResponse(201, stats, "All stats have been gathered"))
     
 })
 
@@ -45,9 +48,10 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     const user = req.user?._id
 
     const videos = await Video.find(
-        {owner: mongoose.Types.ObjectId(user)}
+        {owner: new mongoose.Types.ObjectId(user)}
     )
-    return new ApiResponse(201, videos, "Videos fetched successfully")
+   return res.status(201)
+    .json(new ApiResponse(201, videos, "Video fetched successfully"))
 
 })
 

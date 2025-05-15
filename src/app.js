@@ -17,10 +17,22 @@ app.use(CookieParser()); //to store the cookie
 
 import userRouter from "./routes/user.routes.js"
 import videoRouter from "./routes/video.routes.js"
+import commentRouter from "./routes/comment.routes.js"
+import dashboardRouter from "./routes/dashboard.routes.js"
+import LikeRouter from "./routes/like.routes.js"
+import PlaylistRouter from "./routes/playlist.routes.js"
+import SubcriptionRouter from "./routes/subscription.routes.js"
+import tweetRouter from "./routes/tweet.routes.js"
 
 //routes declaration
 app.use('/api/v1/users',userRouter)
 app.use('/api/v1/video',videoRouter)
+app.use('/api/v1/comment',commentRouter)
+app.use('/api/v1/dashboard',dashboardRouter)
+app.use('/api/v1/like',LikeRouter)
+app.use('/api/v1/playlist',PlaylistRouter)
+app.use('/api/v1/subscription',SubcriptionRouter)
+app.use('/api/v1/tweet',tweetRouter)
 
 
 export {app};

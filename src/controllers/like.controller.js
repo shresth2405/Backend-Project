@@ -10,75 +10,92 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 const toggleVideoLike = asyncHandler(async (req, res) => {
     const {videoId} = req.params
     const userId = req.user?._id;
-    const existingLike= Like.findOne({
+    const existingLike= await Like.findOne({
         likedBy:userId,
         video: videoId
     })
+    let message = ""
+    console.log("phle se like",existingLike)
     if(existingLike){
         await Like.findByIdAndDelete(existingLike._id)
-        return res.status(200).json(new ApiResponse(200, null, "Video unliked successfully"));
+        message = "Video unliked successfully"
     }
-    const like = await Like.create({
-        likedBy:userId,
-        video: videoId
-    })
-    if(!like){
-        throw new ApiError(400, "video cannot be liked")
+    else{
+        const like = await Like.create({
+            likedBy:userId,
+            video: videoId
+        })
+        if(!like){
+            throw new ApiError(400, "video cannot be liked")
+        }
+        message = "Video Liked Successfully"
     }
-    return res.status(201).json(new ApiResponse(201, null, "Video liked successfully"));
+    return res.status(201).json(new ApiResponse(201, null, message));
 
 })
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
     const {commentId} = req.params
     const userId = req.user?._id;
-    const existingLike= Like.findOne({
+    const existingLike= await Like.findOne({
         likedBy:userId,
-        comment: commentId
+        comment: mongoose.Types.ObjectId(commentId)
     })
+    let message;
     if(existingLike){
         await Like.findByIdAndDelete(existingLike._id)
-        return res.status(200).json(new ApiResponse(200, null, "Comment unliked successfully"));
+        message= "Comment unliked successfully"
     }
-    const like = await Like.create({
-        likedBy:userId,
-        comment :commentId
-    })
-    if(!like){
-        throw new ApiError(400, "comment cannot be liked")
+    else{
+        const like = await Like.create({
+            likedBy:userId,
+            comment : mongoose.Types.ObjectId(commentId)
+        })
+        if(!like){
+            throw new ApiError(400, "comment cannot be liked")
+        }
+        message= "Comment liked successfully"
     }
-    return res.status(201).json(new ApiResponse(201, null, "Comment liked successfully"));
+    return res.status(201).json(new ApiResponse(201, message));
 })
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
+    // console.log(tweetId)
     const userId = req.user?._id;
-    const existingLike= Like.findOne({
-        owner:userId,
-        tweet: tweetId
+    const existingLike= await Like.findOne({
+        likedBy:userId,
+        tweet: new mongoose.Types.ObjectId(tweetId)
     })
+    // console.log(existingLike)
+    let message;
     if(existingLike){
         await Like.findByIdAndDelete(existingLike._id)
-        return res.status(200).json(new ApiResponse(200, null, "tweet unliked successfully"));
+        message = "Tweet unliked sucessfully"
     }
-    const like = await Like.create({
-        likedBy:userId,
-        tweet: tweetId
-    })
-    if(!like){
-        throw new ApiError(400, "tweet cannot be liked")
+    else{
+        const like = await Like.create({
+            likedBy:userId,
+            tweet: new mongoose.Types.ObjectId(tweetId)
+        })
+
+        if(!like){
+            throw new ApiError(400, "tweet cannot be liked")
+        }
+        message = "Tweet liked sucessfully"
     }
-    return res.status(201).json(new ApiResponse(201, null, "tweet liked successfully"));
+    return res.status(201).json(new ApiResponse(201, message));
 
 }
 )
 
 const getLikedVideos = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
-    const video = Like.aggregate([
+    console.log(userId)
+    const video = await Like.aggregate([
         {
             $match:{
-                owner: mongoose.Types.ObjectId(userId)
+                likedBy: userId
             }
         },{
             $lookup:{
@@ -86,36 +103,39 @@ const getLikedVideos = asyncHandler(async (req, res) => {
                 localField:"video",
                 foreignField:"_id",
                 as:"likedVideos",
-                pipeline:[
-                    {
-                        $lookup:{
-                            from : "users",
-                            localField:"owner",
-                            foreignField:"_id",
-                            as:"owner",
-                            pipeline:[
-                                {
-                                    $project:{
-                                        username:1,
-                                        fullName:1,
-                                        avatar:1
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                ]
             }
+        },
+        {
+            $unwind: "$likedVideos"
+        },{
+            $lookup:{
+                from: "users",
+                localField: "likedVideos.owner",
+                foreignField: "_id",
+                as: "likedVideos.ownerDetails"
+            }
+        },{
+            $unwind: "$likedVideos.ownerDetails"
         }
     ])
-    if(!video){
-        throw new ApiError(400, "Videos cannot be fetched successfully")
-    }
+    console.log(video)
+
     return res
     .status(201)
     .json(
         new ApiResponse(201, video, "videos fetched successfully")
     )
+})
+
+export const getAlltheLikes = asyncHandler( async (req, res)=>{
+    const userId = req.user?._id;
+    console.log(userId)
+    const like = await Like.findOne({
+        likedBy: userId
+    })
+    // console.log(like)
+    return res.status(201)
+    .json(new ApiResponse(201, like, "Likes fetched Successfully"))
 })
 
 export {

@@ -1,5 +1,5 @@
 import mongoose, { isValidObjectId } from "mongoose"
-import {Tweet} from "../models/tweet.model.js"
+import {Tweet} from "../models/tweets.model.js"
 import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
@@ -7,30 +7,31 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
-    const content = req.query
+    const content = req.query.content
     const owner = req.user?.id
     const tweet = await Tweet.create({
-        content: content,
+        content: content.toString(),
         owner: owner
     })
     if(!tweet){
         throw new ApiError(400,"Tweet cannot be made");
     }
-    return new ApiResponse(201, "Tweet created successfully")
+    return res.status(201)
+    .json(new ApiResponse(201,tweet, "Tweet created successfully"))
 })
 
 const getUserTweets = asyncHandler(async (req, res) => {
     // TODO: get user tweets
-    const user= user.req?._id;
+    const userid= req.user?._id;
     const tweet = await Tweet.aggregate([
         {
-            $match:{owner: new mongoose.Types.ObjectId(user)}
+            $match:{owner: new mongoose.Types.ObjectId(userid)}
         },
         {
             $lookup:{
                 from: "users",
-                localfield: "owner",
-                foreignfield: "_id",
+                localField: "owner",
+                foreignField: "_id",
                 as: "userTweet"
             }
         },{
@@ -38,7 +39,8 @@ const getUserTweets = asyncHandler(async (req, res) => {
         },
        
     ])
-    return new ApiResponse(201, tweet, "Tweets Fetched Successfully")
+    return res.status(201)
+    .json(new ApiResponse(201,tweet, "Tweet fetched successfully"))
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
@@ -50,18 +52,20 @@ const updateTweet = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Tweet cannot be fetched")
     }
     tweet.content= content
-    await Tweet.save({validateBeforeSave: false})
-    return new ApiResponse(201, "Tweet updated successfully")
+    await tweet.save({validateBeforeSave: false})
+    return res.status(201)
+    .json(new ApiResponse(201,tweet, "Tweet updated successfully"))
 
 })
 
 const deleteTweet = asyncHandler(async (req, res) => {
     //TODO: delete tweet
     const user = req.user?._id
-    const {tweetId} = req.query
+    const {tweetId} = req.params
     await Tweet.findByIdAndDelete(tweetId);
 
-    return new ApiResponse(201, "Tweet deleted successfully");
+    return res.status(201)
+    .json(new ApiResponse(201, "Tweet deleted successfully"))
     
 })
 
